@@ -1,0 +1,25 @@
+
+#########Static for Setting.py 
+
+STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "public/static"),
+    os.path.join(BASE_DIR, "static")
+]
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'public/static')
+MEDIA_URL = '/media/'
+
+
+
+#########Python URL Petarn
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+       
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,25 @@
+from django.contrib import messages
+
+
+
+messages.info(request,"Account Created Successfully")
+
+
+
+
+        {% if messages %}
+        {{message.tags}}  
+        <div class="alert alert-primary" role = 'alert'>
+          {% for message in messages %}
+          {{message}}
+          {% endfor %}
+
+        </div>
+        {% endif %}
+
+
+
+git commit -m "portfolioapp settings vercel"
+git branch -M main
+git remote add origin https://github.com/NahidIslamN/dev_nahid.git
+git push -u origin main

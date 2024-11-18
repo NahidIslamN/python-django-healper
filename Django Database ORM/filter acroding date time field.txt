@@ -1,0 +1,1 @@
+records = ModelName.objects.filter(admin = admin, meal_date__year=year, meal_date__month=month)

@@ -1,0 +1,96 @@
+
+
+######## IN view .py
+
+from django.core.mail import send_mail
+from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from .models import OTP
+import random
+
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+
+
+def send_otp_email(email, otp):
+    subject = 'Your E-Voting OTP'
+    html_message = render_to_string('email_template.html', {'otp': otp})
+    plain_message = strip_tags(html_message)
+    send_mail(subject, plain_message, 'from@example.com', [email], html_message=html_message)
+
+
+def generate_and_send_otp(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if CustomUser.objects.filter(email = email).exists():
+            otp = generate_otp()
+            send_otp_email(email, otp)
+            otp_instance, created = CustomUser.objects.get_or_create(email=email)
+            otp_instance.otp = otp
+            otp_instance.save()
+            return redirect(f'/verify_otp/{email}/')
+        else:
+            messages.info(request,"Invailed Email Address !")
+            return redirect("/generate_otp/")
+    return render(request, 'generate_otp.html')
+
+
+def verify_otp(request , email):
+    if request.method == 'POST':
+        email_adress = email 
+        otp_entered = request.POST.get('otp')
+        try:
+            otp_instance = CustomUser.objects.get(email=email_adress)
+            if otp_instance.otp == otp_entered:
+                # OTP matched, do something here
+                messages.info(request,"Success Veryfied !")
+                return redirect("/generate_otp/")
+            else:
+                # OTP matched, do something here
+                messages.info(request,"Failed Veryfied !")
+                return redirect("/generate_otp/")
+        except CustomUser.DoesNotExist:
+            messages.info(request,"Failed Veryfied !")
+            return redirect("/generate_otp/")
+    return render(request,'verify_otp.html')
+
+
+
+
+
+
+
+## in model .py filed shoulbe stay email field and otp field
+
+from django.db import models
+
+class OTP(models.Model):
+    email = models.EmailField(unique=True)
+    otp = models.CharField(max_length=6)
+#demo
+
+
+
+
+
+######in setting.py
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # e.g., 'smtp.example.com'
+EMAIL_PORT = 587  # Port for SMTP (usually 587 for TLS)
+EMAIL_USE_TLS = True  # Whether to use TLS encryption
+EMAIL_HOST_USER = 'nahidislam740405@gmail.com'  # Your email address
+EMAIL_HOST_PASSWORD = 'oddrsoemmkruxtsq'  # Your email password or app password if using Gmail
+DEFAULT_FROM_EMAIL = 'nahidislam740405@gmail.com'  # Default sender email address
+
+
+
+ #User Email Varifications
+    path ("generate_otp/",generate_and_send_otp, name = "generate_otp"),
+    path("verify_otp/<email>/",verify_otp, name ="verify_otp")
+    
+

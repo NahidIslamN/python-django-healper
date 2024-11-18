@@ -1,0 +1,124 @@
+# in views.py 
+from django.core.paginator import Paginator
+
+
+
+
+# this is a function of paginator
+
+def department_list(request):
+
+    Dep_data = Departments.objects.all() # this line get all the data of a database
+
+    Departcount = Departments.objects.all().count()
+
+    paginator = Paginator(Dep_data,6) # This paginator variable contain a function wich is Paginator, Paginator function is create page for data 
+
+    pagenumber = request.GET.get("page") # pagenumber variable is for maintain url
+
+    Finaldata = paginator.get_page(pagenumber) # final data is the data wich show us data which we want
+
+    last_page = Finaldata.paginator.num_pages # target the last page number
+
+
+    cp = {
+        "Dep_data":Finaldata, # We will sent data to context processor wich is     """"""    Finaldata    """"""""
+        "Departcount":Departcount,
+	"last_page":last_page,
+	"totalpage_list":[n+1 for n in range(last_page)]
+    }
+    return render(request,"principal/department_list.html",context=cp)
+
+
+
+
+
+###### THIS IS THE CLEAR CODE #####
+
+def department_list(request):
+    Dep_data = Departments.objects.all()
+    Departcount = Departments.objects.all().count()
+    paginator = Paginator(Dep_data,6)
+    pagenumber = request.GET.get("page")
+    Finaldata = paginator.get_page(pagenumber)
+    last_page = Finaldata.paginator.num_pages
+
+
+    cp = {
+        "Dep_data":Finaldata,
+        "Departcount":Departcount,
+        "last_page":last_page,
+        "totalpage_list":[n+1 for n in range(last_page)]
+
+    }
+    return render(request,"principal/department_list.html",context=cp)
+
+
+
+
+
+
+
+
+
+####### HTML CODE HERE .......
+
+
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-end">
+         {% if Dep_data.has_previous %}
+          <li class="page-item">
+                <a class="page-link" href="/department_list/?page=1"  >First</a>
+          </li>
+
+          <li class="page-item">
+            <a class="page-link" href="?page={{Dep_data.previous_page_number}}" tabindex="-1">Previous</a>
+          </li>
+         {% else %}
+         <li class="page-item">
+            <a class="page-link disabled" href="#"  >First</a>
+         </li>
+
+         <li class="page-item">
+                <a class="page-link disabled" href="#" tabindex="-1">Previous</a>
+         </li>
+         {% endif %}
+         
+         {% for p in totalpage_list %}
+          <li class="page-item"><a class="page-link" href="?page={{p}}">{{p}}</a></li>
+         {% endfor %}
+
+      
+          {% if Dep_data.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{Dep_data.next_page_number}}" >Next</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{last_page}}" >Last</a>
+          </li>
+          {% else %}
+          <!-- None -->
+          {% endif %}
+        </ul>
+    </nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

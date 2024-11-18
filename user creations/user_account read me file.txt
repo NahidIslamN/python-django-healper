@@ -1,0 +1,3 @@
+# in setting.py 
+
+AUTH_USER_MODEL = 'user_account.User'

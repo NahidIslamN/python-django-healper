@@ -1,0 +1,12 @@
+
+from django.db.models import Q
+
+
+# Data will fileter if Q(from_sender_id=sender_id, to_reciver_id=user_id) conditin is true or  Q(from_sender_id=user_id, to_reciver_id=sender_id) is true
+
+   messages = message_model_for_user.objects.filter(
+        Q(from_sender_id=sender_id, to_reciver_id=user_id) |
+        Q(from_sender_id=user_id, to_reciver_id=sender_id)
+    ).order_by('create_at')
+
+

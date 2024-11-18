@@ -1,0 +1,77 @@
+####$##settings.py###################
+
+
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'AuthApp'###this app shold be installed
+   
+]
+
+
+
+
+
+### MIDLEWARETOKEN
+'AuthApp.middleware.UserLoginActivityMiddleware'
+
+
+
+AUTH_USER_MODEL = 'AuthApp.CustomUser'
+
+
+LOGIN_URL = '/auth/signin/' #### your login url here
+
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # e.g., 'smtp.example.com'
+EMAIL_PORT = 587  # Port for SMTP (usually 587 for TLS)
+EMAIL_USE_TLS = True  # Whether to use TLS encryption
+EMAIL_HOST_USER = 'info.quicktradeing@gmail.com'  # Your email address
+EMAIL_HOST_PASSWORD = 'rxqpekwtfvqwxujd'  # Your email password or app password if using Gmail
+DEFAULT_FROM_EMAIL = 'info.quicktradeing@gmail.com'  # Default sender email address
+
+
+
+
+
+
+
+
+########################### in  urls.py file 
+
+from django.urls import path,include
+
+path('auth/', include('AuthApp.urls')),
+
+
+
+##############migrate and migrations
+
+python manage.py makemigrations #### hit to migrations this app
+
+python manage.py migrate
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+

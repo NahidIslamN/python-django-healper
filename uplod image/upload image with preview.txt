@@ -1,0 +1,93 @@
+
+{% block extralinks %}
+
+
+  <!-- Include Cropper.js CSS and JS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+
+
+{% endblock extralinks %}
+
+
+
+#### in html form
+
+
+
+
+
+
+                  <div class="row mb-3">
+                    <label for="profileImage" class="col-md-4 col-lg-3 col-form-label">Profile Image</label>
+                    <div class="col-md-8 col-lg-9">
+
+                      <div>
+                        
+                      </div>
+                      
+                      {% if user.profile_pic %}
+                      <img src="{{user.profile_pic.url}}" id="previewImage", class="rounded-circle"/>
+                      {% else %}
+                      <img src="/static/images/user.jpg" id="previewImage" alt="Profile" class="rounded-circle">
+                      {% endif %}
+
+                      <div class="pt-2">
+                        <input name="pppp" class="form-control" type="file" id="uploadImage" accept="image/*">                
+                      </div>
+
+                      
+
+                    </div>
+                  </div>
+
+
+
+
+
+
+
+
+
+
+# Extra scripts
+
+
+
+
+
+
+
+{% block extrascripts %}
+
+
+<script>
+  let cropper;
+  const uploadImage = document.getElementById('uploadImage');
+  const previewImage = document.getElementById('previewImage');
+  const cropButton = document.getElementById('cropButton');
+  const canvas = document.getElementById('croppedImage');
+
+  // Show image after selecting a file
+  uploadImage.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImage.src = e.target.result;
+        previewImage.style.display = 'block';
+
+        // Initialize Cropper.js
+        cropper = new Cropper(previewImage, {
+          aspectRatio: 1, // Set the aspect ratio (1:1 here for square cropping)
+          viewMode: 1,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+</script>
+
+{% endblock extrascripts %}

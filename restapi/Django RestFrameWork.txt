@@ -1,0 +1,213 @@
+step-1:
+
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+    'rest_framework.authtoken',
+]
+
+
+
+
+
+step-2:
+ 
+Create Your Model migration and migrate
+
+
+
+
+
+step-3:
+
+# in serializers.py
+
+from rest_framework import serializers
+from appname.models import YourModel
+
+class AppNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = YourModel
+        fields = ['Your Model's Field', 'title', 'code', 'linenos', 'language', 'style']
+
+
+
+
+
+
+
+step 4:
+# in Views.py
+
+from AppName.models import YourModel
+from AppName.serializers import YourSerializer
+from rest_framework import generics
+from rest_framework import mixins
+
+#for Authentications
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+
+class DemoDataList(generics.ListCreateAPIView, mixins.ListModelMixin,
+                  mixins.CreateModelMixin,
+                  generics.GenericAPIView):
+    queryset = DemoData.objects.all()
+    serializer_class = DemoDataSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+
+    #Authentication Part
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+
+class DemoDataDetail(generics.RetrieveUpdateDestroyAPIView, mixins.RetrieveModelMixin,
+                    mixins.UpdateModelMixin,
+                    mixins.DestroyModelMixin,
+                    generics.GenericAPIView):
+    queryset = DemoData.objects.all()
+    serializer_class = DemoDataSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+    #Authentication Part
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+
+
+
+
+
+
+#For token Authentication
+1. rest_framework.authtoken # install the app in setting app and migrate command
+2. authentication_classes = [TokenAuthentication]
+
+
+step 5:
+
+in config the url of the views wich you are created
+and hit url to check your api perfectly working or not
+chect in Thandercliend or Postman
+
+
+
+
+
+
+
+’’’Call me when the neglect is over, I will say “I love you” again.’’’
+
+
+
+
+
+
+
+
+
+################################################################################
+
+
+viewset and router
+
+
+step 1:
+in views.py # Change only views.py 
+
+
+from django.contrib.auth.models import User
+from apiapp.models import DemoData
+from django.shortcuts import get_object_or_404
+from apiapp.serializers import DemoDataSerializer
+from rest_framework import viewsets
+from rest_framework.response import Response
+
+from rest_framework import status
+
+
+class UserViewSet(viewsets.ViewSet):
+ 
+    def list(self, request):
+        queryset = DemoData.objects.all()
+        serializer = DemoDataSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = DemoData.objects.all()
+        user = get_object_or_404(queryset, pk=pk)
+        serializer = DemoDataSerializer(user)
+        return Response(serializer.data)
+    
+    def create(self, request):
+        serializer = DemoDataSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+    def update(self, request, pk=None):
+        contact = DemoData.objects.get(pk = pk)
+        serializer = DemoDataSerializer(contact,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+step 2 :
+
+in urls.py # Change the urls.py
+
+from django.urls import path
+from django.urls.conf import include
+from apiapp.views import *
+
+
+from apiapp.views import UserViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'DemoDatas', UserViewSet, basename='DemoData')
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

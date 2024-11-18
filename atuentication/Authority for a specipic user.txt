@@ -1,0 +1,34 @@
+in your project directory create a pyhton file named decorators.py
+
+
+#### in decorators.py file write the code
+
+from functools import wraps
+from django.shortcuts import redirect
+from django.contrib import messages
+
+def specific_user_required(user_id):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            if request.user.is_authenticated and request.user.id == user_id:
+                return view_func(request, *args, **kwargs)
+            else:
+                # Redirect or handle unauthorized access
+                messages.error(request, 'Unauthorized access!')
+                return redirect('login')  # Redirect to login page
+        return wrapper
+    return decorator
+
+
+
+
+
+
+
+
+in your view function file
+
+from .decorators import specific_user_required
+@specific_user_required(user_id=2)
+

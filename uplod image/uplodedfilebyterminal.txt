@@ -1,0 +1,20 @@
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from baseapp.models import CustomUser
+
+# Assuming you have an image file named 'My Photo.png' in your desktop
+image_path = r"C:\Users\Nahid Islam\Desktop\My Photo.png"
+
+# Read the image file and create a SimpleUploadedFile
+with open(image_path, 'rb') as f:
+    image_data = f.read()
+    image = SimpleUploadedFile('My Photo.png', image_data, content_type='image/png')
+
+# Assuming custom[0] is the user you want to update
+custom = CustomUser.objects.all()
+if custom:
+    custom[0].profile_pic = image
+    custom[0].save()
+    print(f"Profile picture updated for user: {custom[0]}")
+else:
+    print("No users found in the queryset.")

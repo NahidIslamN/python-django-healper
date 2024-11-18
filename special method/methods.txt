@@ -1,0 +1,13 @@
+01. Speacial Methods
+
+
+filtering
+1.1 |POSTData = POSTData.filter(PostName__icontains = SData.get("Search")) #serch by specific text
+1.5 |usr = PostMoles.objects.filter(post_view_count__gte = 50) # if the fild is integer, we will get the value of getter then 50
+1.5 |usr = PostMoles.objects.filter(post_view_count__lte = 50) # if the fild is integer, we will get the value of less then 50
+
+
+shorting
+1.2 |usrs = ModelName.objects.all().order_by("post_view_count") # Assignding short
+1.3 |usrs = PostMoles.objects.all().order_by("-post_view_count") #designding short
+1.4 |usrs = PostMoles.objects.all().order_by("-post_view_count")[0:3] #For limitetaions
