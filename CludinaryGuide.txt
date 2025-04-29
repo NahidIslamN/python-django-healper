@@ -1,0 +1,68 @@
+# settings.py 
+
+INSTALLED_APPS = [
+
+    'cloudinary',               
+    'cloudinary_storage',
+]
+
+
+
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "public/static"),
+    os.path.join(BASE_DIR, "static")
+]
+
+# Cloudinary Configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'your_clud_name',
+    'API_KEY': 'api_key',
+    'API_SECRET': 'api_secrect_key',
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'
+
+
+
+# urls.py
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+
+
+# your model image field shoulde be 
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True, null=True, blank=True)
+    is_modaretor = models.BooleanField(default=True)
+    otp = models.CharField(max_length=8, null=True, blank=True)
+    is_password_forget = models.BooleanField(default=False)
+    profile_images = models.ImageField(
+        upload_to="user_profiles",
+        storage=MediaCloudinaryStorage(),
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return self.username
+    
+
+
+
+
+
+
+
+
+
+
+
+
