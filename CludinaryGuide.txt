@@ -38,6 +38,7 @@ if settings.DEBUG:
 
 
 # your model image field shoulde be 
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=True)
