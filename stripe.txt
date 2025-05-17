@@ -28,3 +28,38 @@ def create_checkout_session(request, price_id):
         return Response({"error":str(e)}) 
 
     return Response({'checkout_url': checkout_session.url})
+
+
+
+
+
+
+
+
+### Create a Product in Stripe
+
+@api_view(["POST"])
+def create_product(request):
+    try:
+        # Create a product
+        product = stripe.Product.create(
+            name="Test Product2",
+            description="This is a test product from Django",
+            default_price_data={
+                "unit_amount": 1000,  # price in cents (e.g., $10.00)
+                "currency": "usd",
+            },
+            expand=["default_price"]
+        )
+
+        return Response({
+            "product_id": product.id,
+            "product_name": product.name,
+            "price_id": product.default_price.id
+        })
+
+    except stripe.error.StripeError as e:
+        return Response({"error": str(e)}, status=400)
+
+
+
