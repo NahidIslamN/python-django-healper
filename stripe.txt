@@ -1,1 +1,30 @@
+import os
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+import stripe
+# This is your test secret API key.
+stripe.api_key = 'sk_test_51RPSN6RqaNOg6zRukjQhcDAqdbAAen96IzcmzUNedCvzWlYtOFHSIhvYbN7YkhkfnveL8iiZ4UJMZuXGiuIZRrg800n44VU2OK'
+
+
+
+
+@api_view(['POST'])
+def create_checkout_session(request, price_id):
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            line_items=[
+                {
+                    'price': f'{price_id}',
+                    'quantity': 1,
+                },
+            ],
+            mode='payment',
+            success_url='http://127.0.0.1:8000',
+            cancel_url='http://127.0.0.1:8000/product',
+        )
+    except Exception as e:
+        return Response({"error":str(e)}) 
+
+    return Response({'checkout_url': checkout_session.url})
