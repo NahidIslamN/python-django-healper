@@ -63,3 +63,24 @@ def create_product(request):
 
 
 
+
+
+
+
+
+#Get Trangection
+
+
+@api_view(["GET"])
+def chargelist(request):
+
+
+    # List all charges (by default returns 10, max is 100 per request)
+    charges = stripe.Charge.list(limit=100)
+
+    return Response(charges, status=status.HTTP_200_OK)
+
+
+
+
+
