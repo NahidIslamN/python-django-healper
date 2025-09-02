@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 import stripe
 # This is your test secret API key.
-stripe.api_key = 'sk_test_51RPSN6RqaNOg6zRukjQhcDAqdbAAen96IzcmzUNedCvzWlYtOFHSIhvYbN7YkhkfnveL8iiZ4UJMZuXGiuIZRrg800n44VU2OK'
+stripe.api_key = 'your_secret_key'
 
 
 
