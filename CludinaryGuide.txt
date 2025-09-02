@@ -12,7 +12,7 @@ INSTALLED_APPS = [
 ]
 
 
-
+# static file configuration
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -37,6 +37,9 @@ MEDIA_URL = '/media/'
 # urls.py
 
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
@@ -60,6 +63,7 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
     
+
 
 
 
