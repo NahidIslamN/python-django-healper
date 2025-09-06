@@ -1,0 +1,207 @@
+#install packages,
+
+pip install daphne
+pip install channels
+
+
+
+
+
+
+
+
+
+# settting.py 
+
+INSTALLED_APPS = [
+    'daphne',
+
+]
+
+
+ASGI_APPLICATION = 'JVaitaks.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+# consumer.py in your app folder
+
+from channels.generic.websocket import AsyncWebsocketConsumer
+import json
+
+class ChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Get room name from URL
+        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_group_name = f"chat_{self.room_name}"
+
+        # Add this channel to the group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        # Set user from scope (middleware must set scope["user"])
+        self.user = self.scope.get("user")
+
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        message = data.get("message", "")
+
+        # Send message to the group
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_message",
+                "message": message,
+                "username": getattr(self.user, "username", "Anonymous"),
+            }
+        )
+
+    async def chat_message(self, event):
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            "message": event["message"],
+            "username": event["username"],
+        }))
+
+
+
+
+
+
+
+
+
+
+#routing.py in your app folder
+
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django.urls import re_path
+from .consumer import ChatConsumer
+from .custom_auth import CustomAuthMiddleware
+
+websocket_urlpatterns = [
+    re_path(r'ws/chat/(?P<room_name>\w+)/$', ChatConsumer.as_asgi()),
+]
+
+application = ProtocolTypeRouter({
+    "websocket": CustomAuthMiddleware(
+        URLRouter(websocket_urlpatterns)
+    ),
+})
+
+
+
+
+
+
+
+
+
+# asgi.py in project folder
+"""
+ASGI config for JVaitaks project.
+
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
+"""
+
+import os
+
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.security.websocket import AllowedHostsOriginValidator
+from chats.routing import websocket_urlpatterns
+from chats.custom_auth import CustomAuthMiddleware
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'JVaitaks.settings')
+
+# application = get_asgi_application()
+
+# ASGI_APPLICATION = 'JVaitaks.asgi.application'
+
+
+
+application = ProtocolTypeRouter(
+    {
+        'http':get_asgi_application(),
+        "websocket": AllowedHostsOriginValidator(
+            CustomAuthMiddleware(
+                URLRouter(
+                    websocket_urlpatterns
+                )
+            )
+        )
+    }
+)
+
+
+
+
+
+
+
+
+
+
+
+# custom_auth.py in your app folder
+from urllib.parse import parse_qs
+from channels.middleware import BaseMiddleware
+from channels.db import database_sync_to_async
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+
+User = get_user_model()
+
+class CustomAuthMiddleware(BaseMiddleware):
+    async def __call__(self, scope, receive, send):
+        scope['user'] = await self.get_user(scope)
+        return await super().__call__(scope, receive, send)
+
+    @database_sync_to_async
+    def get_user(self, scope):
+        try:
+            query_string = parse_qs(scope['query_string'].decode())
+            token = query_string.get('token')  # list of values
+            if not token:
+                return AnonymousUser()
+
+            token = token[0]  # get first token
+            access_token = AccessToken(token)
+
+            user_id = access_token['user_id']
+            user = User.objects.get(id=user_id)
+            return user
+        except (User.DoesNotExist, TokenError, InvalidToken, Exception):
+            return AnonymousUser()
+
+
