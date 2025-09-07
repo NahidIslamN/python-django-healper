@@ -103,20 +103,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 #routing.py in your app folder
 
-from channels.routing import ProtocolTypeRouter, URLRouter
+
 from django.urls import re_path
 from .consumer import ChatConsumer
-from .custom_auth import CustomAuthMiddleware
+
 
 websocket_urlpatterns = [
     re_path(r'ws/chat/(?P<room_name>\w+)/$', ChatConsumer.as_asgi()),
 ]
-
-application = ProtocolTypeRouter({
-    "websocket": CustomAuthMiddleware(
-        URLRouter(websocket_urlpatterns)
-    ),
-})
 
 
 
@@ -207,6 +201,7 @@ class CustomAuthMiddleware(BaseMiddleware):
             return user
         except (User.DoesNotExist, TokenError, InvalidToken, Exception):
             return AnonymousUser()
+
 
 
 
