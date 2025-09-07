@@ -19,7 +19,7 @@ INSTALLED_APPS = [
 ]
 
 
-ASGI_APPLICATION = 'JVaitaks.asgi.application'
+ASGI_APPLICATION = 'ProjectName.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
@@ -140,11 +140,11 @@ from channels.security.websocket import AllowedHostsOriginValidator
 from chats.routing import websocket_urlpatterns
 from chats.custom_auth import CustomAuthMiddleware
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'JVaitaks.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'YourProjectName.settings')
 
 # application = get_asgi_application()
 
-# ASGI_APPLICATION = 'JVaitaks.asgi.application'
+# ASGI_APPLICATION = 'YourProjectName.asgi.application'
 
 
 
@@ -203,5 +203,6 @@ class CustomAuthMiddleware(BaseMiddleware):
             return user
         except (User.DoesNotExist, TokenError, InvalidToken, Exception):
             return AnonymousUser()
+
 
 
