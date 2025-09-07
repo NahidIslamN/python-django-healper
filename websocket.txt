@@ -15,6 +15,7 @@ pip install channels
 
 INSTALLED_APPS = [
     'daphne',
+    'channels',
 
 ]
 
@@ -203,6 +204,7 @@ class CustomAuthMiddleware(BaseMiddleware):
             return user
         except (User.DoesNotExist, TokenError, InvalidToken, Exception):
             return AnonymousUser()
+
 
 
 
