@@ -208,6 +208,51 @@ class CustomAuthMiddleware(BaseMiddleware):
             if not token:
                 return AnonymousUser()
 
+
+
+
+
+
+
+
+
+
+
+# ####################################################### call a websocket consumer in django view ######################################
+pip install websockets
+
+
+
+import asyncio
+import websockets
+import json
+from django.http import JsonResponse
+from rest_framework_simplejwt.tokens import AccessToken
+from api.models import CustomUser  # Adjust the import for your user model
+
+
+
+
+async def send_websocket_message(token, username, message):
+    # WebSocket URL with token as query parameter
+    ws_url = f"ws://localhost:8000/ws/sc/notification/{username}/?token={token}"
+
+    # Establish the WebSocket connection
+    async with websockets.connect(ws_url) as websocket:
+        # Prepare the message to send
+        message_data = {
+            'message': message,
+        }
+        
+        # Send message to the WebSocket server
+        await websocket.send(json.dumps(message_data))
+
+        # Wait for a response from the server (optional)
+        response = await websocket.recv()
+        return response
+    
+
+
             token = token[0]  # get first token
             access_token = AccessToken(token)
 
@@ -216,6 +261,10 @@ class CustomAuthMiddleware(BaseMiddleware):
             return user
         except (User.DoesNotExist, TokenError, InvalidToken, Exception):
             return AnonymousUser()
+
+
+response = asyncio.run(send_websocket_message(tokens, user.username, note))
+
 
 
 
