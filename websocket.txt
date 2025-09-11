@@ -2,6 +2,7 @@
 
 pip install daphne
 pip install channels
+pip install channels-redis
 
 
 
@@ -25,12 +26,26 @@ INSTALLED_APPS = [
 
 ASGI_APPLICATION = 'ProjectName.asgi.application'
 
+
+
+
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
 
+or 
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 
 
@@ -201,6 +216,7 @@ class CustomAuthMiddleware(BaseMiddleware):
             return user
         except (User.DoesNotExist, TokenError, InvalidToken, Exception):
             return AnonymousUser()
+
 
 
 
