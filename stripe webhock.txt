@@ -1,0 +1,118 @@
+01. websocket.py
+
+
+
+import stripe
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from .models import OrderItem  # Import your Order model to update the payment status
+
+# Set your secret key
+stripe.api_key = settings.STRIPE_TEST_SECRET_KEY
+@csrf_exempt
+def stripe_webhook(request):
+    if request.method == "POST":
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        endpoint_secret = settings.STRIPE_WEBHOOK_SECRET  # Your webhook secret from Stripe
+
+        # Verify the webhook signature
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        except ValueError as e:
+            return JsonResponse({'message': 'Invalid payload'}, status=400)
+        except stripe.error.SignatureVerificationError as e:
+            return JsonResponse({'message': 'Invalid signature'}, status=400)
+
+        # Handle different event types
+        if event['type'] == 'checkout.session.completed':
+            payment_intent = event['data']['object']  # Contains the PaymentIntent
+            order_id = payment_intent.get('client_reference_id')
+
+            if not order_id:
+                return JsonResponse({'message': 'Order ID not found in metadata'}, status=400)
+            
+            try:
+                # Retrieve the order
+                order = OrderItem.objects.get(id=order_id)
+                order.is_paid = True  # Update order status to 'Paid'
+                order.save()
+                return JsonResponse({'message': 'Order successfully updated to paid'}, status=200)
+
+            except OrderItem.DoesNotExist:
+                return JsonResponse({'message': f'Order with ID {order_id} not found'}, status=404)
+
+        # Handle other event types as necessary
+        return JsonResponse({'message': 'Event type not handled'}, status=200)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+02 . checkout sessions
+
+
+class MyOrderDetails(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self,request,pk):
+        try:
+            order_details = OrderItem.objects.get(id = pk)
+            if order_details.customer == request.user:
+                serializer = OrderDataViewOnlySerializer(order_details)
+                return Response({ "success": True, "message": "data fatched","data":serializer.data })
+            else:
+                return Response({ "success": False, "message": "It is not your order","data":None })
+        except OrderItem.DoesNotExist:
+            return Response({ "success": False, "message": "Order Not found","data":None })
+        
+    def post(self, request, pk):
+        YOUR_DOMAIN = 'http://127.0.0.1:8000' 
+        try:
+            # Retrieve the order object
+            order = OrderItem.objects.get(id=pk)
+            
+            # Create the Stripe checkout session
+            checkout_session = stripe.checkout.Session.create(
+                line_items=[
+                    {
+                        'price': order.products.stripe_price_id,  # Use the Stripe price ID
+                        'quantity': order.quantity,               # Use the quantity from the order
+                    },
+                ],
+                mode='payment',
+                success_url=YOUR_DOMAIN + '/',
+                cancel_url=YOUR_DOMAIN + '/',
+                client_reference_id=str(pk)
+            )
+
+            # Return success response with the checkout session URL
+            return Response({
+                "success": True,
+                "message": "Payment session created successfully!",
+                "data": {
+                    'url': checkout_session.url
+                }
+            })
+
+        except OrderItem.DoesNotExist:
+            return Response({'success': False, 'message': 'Order not found'}, status=404)
+
+        except Exception as e:
+            # Return the error message
+            return Response({'success': False, 'message': str(e)}, status=500)
+            
+            
+            
+            
+03. urls.py
+from websocket import stripe_webhook
+
+    path('product/myorders/successed/', stripe_webhook)
+
