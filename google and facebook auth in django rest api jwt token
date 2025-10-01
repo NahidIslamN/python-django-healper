@@ -1,0 +1,101 @@
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import CustomUser
+from .serializers import *
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.contrib.auth import authenticate
+import random
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.hashers import check_password
+from .tasks import sent_email_to
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
+
+
+
+
+
+
+class GoogleLoginView(APIView):
+    def post(self, request):
+        token = request.data.get("id_token")
+        print(token)    
+        try:
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request())
+            email = idinfo.get("email")
+            owner_name = idinfo.get("name")
+            
+
+            user, created = CustomUser.objects.get_or_create(
+                username=email,
+                owner_name=owner_name,
+                defaults={"email": email},
+                is_email_verified=True,
+                user_type="CUSTOMER"
+            )
+            user.save()
+
+            return Response(generate_tokens_for_user(user), status=status.HTTP_200_OK)
+
+        except Exception:
+            return Response({"error": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class FacebookLoginView(APIView):
+#     def post(self, request):
+#         access_token = request.data.get("access_token")
+#         try:
+#             fb_url = f"https://graph.facebook.com/me?fields=id,name,email&access_token={access_token}"
+#             r = requests.get(fb_url)
+#             data = r.json()
+
+#             if "error" in data:
+#                 return Response({"error": "Invalid Facebook token"}, status=status.HTTP_400_BAD_REQUEST)
+
+#             email = data.get("email", f"{data['id']}@facebook.com")  # fallback if no email
+#             name = data.get("name")
+
+#             user, created = CustomUser.objects.get_or_create(
+#                 username=email,
+#                 defaults={"email": email, "name": name},
+#                 is_email_varified=True
+#             )
+
+#             return Response(generate_tokens_for_user(user))
+
+#         except Exception:
+#             return Response({"error": "Facebook auth failed"}, status=status.HTTP_400_BAD_REQUEST)
+
