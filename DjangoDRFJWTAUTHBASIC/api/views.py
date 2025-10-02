@@ -1,3 +1,4 @@
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,7 +12,12 @@ import random
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.hashers import check_password
+from .tasks import sent_email_to
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
+
+import requests
 
 # Create your views here.
 
@@ -23,17 +29,12 @@ class SignupView(APIView):
             otp = str(random.randint(100000, 999999))
             subject = 'Verification'
             plain_message = f"your otp is {otp}"
-            send_mail(subject, plain_message, 'from@example.com', [user['email']])
-            user = CustomUser.objects.get(username = serializers.data['username'])
+            sent_email_to.delay(email= user['email'], text = plain_message, subject=subject)
+            user = CustomUser.objects.get(email = serializers.data["email"])
             user.otp = otp
             user.save()
-            return Response(
-                {
-                "message":"user createde successfully!",
-                "varify_url": f"http://127.0.0.1:8000/api/verify/{user.username}/"
-                },
-                status=status.HTTP_200_OK
-                )
+            return Response({ "success": True, "message": "user create successfully!", "data":serializers.data, "verify_url": f"http://127.0.0.1:8000/auth/verify/{user.username}/"},status=status.HTTP_201_CREATED)
+
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -153,3 +154,38 @@ class Verify_User_ForgetPassword(APIView):
             except CustomUser.DoesNotExist:
                 return Response({"message":"user not found"})
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+
+def generate_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }
+
+
+class GoogleLoginView(APIView):
+    def post(self, request):
+        token = request.data.get("id_token")
+        print(token)    
+        try:
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request())
+            email = idinfo.get("email")
+            owner_name = idinfo.get("name")
+            
+
+            users, created = CustomUser.objects.get_or_create(email=email)
+            users.owner_name=owner_name
+            users.defaults={"email": email}
+            users.is_email_verified=True
+            # if multiple user have to define user type
+            users.save()
+
+            return Response(generate_tokens_for_user(users), status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            return Response({"error": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
