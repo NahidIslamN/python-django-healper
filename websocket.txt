@@ -184,6 +184,7 @@ application = ProtocolTypeRouter(
 
 
 
+
 # custom_auth.py in your app folder
 from urllib.parse import parse_qs
 from channels.middleware import BaseMiddleware
@@ -207,6 +208,17 @@ class CustomAuthMiddleware(BaseMiddleware):
             token = query_string.get('token')  # list of values
             if not token:
                 return AnonymousUser()
+
+            token = token[0]  # get first token
+            access_token = AccessToken(token)
+
+            user_id = access_token['user_id']
+            user = User.objects.get(id=user_id)
+            return user
+        except (User.DoesNotExist, TokenError, InvalidToken, Exception):
+    
+            return AnonymousUser()
+
 
 
 

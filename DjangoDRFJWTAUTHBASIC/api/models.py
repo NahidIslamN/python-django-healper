@@ -11,6 +11,11 @@ class CustomUser(AbstractUser):
     phone = models.CharField(max_length=15, null=True, blank=True)
     is_email_varified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=True)
+    
+    last_activity = models.DateTimeField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
 
     create_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
