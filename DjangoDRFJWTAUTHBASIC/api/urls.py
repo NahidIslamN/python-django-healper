@@ -8,6 +8,7 @@ urlpatterns = [
     path("changepassword/", ChangePassword.as_view(),),
     path("forgetpassword/", FogetPasswordView.as_view(),),
     path("vefiry_for_forget/<str:username>/", Verify_User_ForgetPassword.as_view()),
+    path("reset_password/", ResetPasswordView.as_view()),
     path('google/', GoogleLoginView.as_view(),)
 
 ]

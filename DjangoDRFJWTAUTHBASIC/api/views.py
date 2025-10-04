@@ -77,13 +77,13 @@ class LoginView(APIView):
                 otp = str(random.randint(100000, 999999))
                 subject = 'Verification'
                 plain_message = f"your otp is {otp}"
-                send_mail(subject, plain_message, 'from@example.com', [user.email])
+                sent_email_to.delay(email= user.email, text = plain_message, subject=subject)
                 user.otp = otp
                 user.save()
                 return Response(
                     {
                         "message":"we sent a otp to your email!", 
-                        "url":f"http://127.0.0.1:8000/api/verify/{serializer.data['username']}/"
+                        "url":f"http://127.0.0.1:8000/auth/verify/{user.username}/"
                         }
                     )
             
@@ -116,13 +116,15 @@ class FogetPasswordView(APIView):
             try:
                 user = CustomUser.objects.get(username = serializer.data['username'])
                 otp = str(random.randint(000000, 999999))
+                user.otp = otp
+                user.save()
                 subject = 'Verification'
                 plain_message = f"your otp is {otp}"
-                send_mail(subject, plain_message, 'from@example.com', [user.email])
+                sent_email_to.delay(email= user.email, text = plain_message, subject=subject)
                 return Response(
                     {
                     "message":"Enter your username parform a post method!",
-                    "varify_url": f"http://127.0.0.1:8000/api/vefiry_for_forget/{user.username}/"
+                    "varify_url": f"http://127.0.0.1:8000/auth/vefiry_for_forget/{user.username}/"
                     },
                     status=status.HTTP_200_OK
                     )
@@ -134,7 +136,7 @@ class FogetPasswordView(APIView):
 
 class Verify_User_ForgetPassword(APIView):
     def post(self, request, username):
-        serializer = OTPSerializerandPasswword(data = request.data)
+        serializer = OTPSerializer(data = request.data)
         if serializer.is_valid():
             try:
                 user = CustomUser.objects.get(username = username)
@@ -153,8 +155,21 @@ class Verify_User_ForgetPassword(APIView):
 
             except CustomUser.DoesNotExist:
                 return Response({"message":"user not found"})
-        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        user = request.user
+        serializer = ResetPasswordSerializer(data = request.data)
+        if serializer.is_valid():
+            user.set_password(serializer.data['new_password'])
+            user.save()
+            return Response({ "success": True, "message": "password reset successfully", "data": None }, status=status.HTTP_200_OK)
+        return Response({ "success": False, "message": "validation error!", "errors": serializer.errors }, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
