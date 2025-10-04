@@ -1,4 +1,14 @@
 
+# pip module 
+pip install google-auth
+pip install requests
+pip install requests
+pip install social-auth-app-django
+
+next step >>>>>
+
+
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status

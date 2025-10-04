@@ -1,7 +1,0 @@
-from django.db.models import Sum
-
-total_meal_tk = ModelName.objects.aggregate(Sum('fieldname'))['fieldname__sum']
-
-or 
-
-total_meal_tk = Meal.objects.filter(user=user).aggregate(Sum('meal_chrge'))['meal_chrge__sum']
