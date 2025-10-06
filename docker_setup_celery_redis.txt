@@ -1,0 +1,125 @@
+Step 1: Install Docker and Docker Compose
+
+# Update packages
+sudo apt update
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+
+# Add Docker’s official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Add Docker repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+
+# Install Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+# Start Docker and enable it at boot
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Verify Docker
+docker --version
+
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+
+
+
+
+step 2 : Dockerfile
+
+# Use Python 3.12
+FROM python:3.12
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project code
+COPY . .
+
+# Default command to run Django development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+
+
+
+
+Step 3: Create docker-compose.yml
+
+
+
+version: "3.9"
+
+services:
+  web:
+    image: python:3.12
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "pip install -r requirements.txt &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - redis
+
+  celery:
+    image: python:3.12
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: celery -A SignalCenter worker -l info
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+
+
+
+
+Note:
+# project settings.py
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
+
+# in dicjer-compose.yml file 
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+
+
+             
+
+Step 3: docker compose commands
+docker-compose up -d --build
+sudo docker-compose up
+docker-compose down
+
+
