@@ -1,0 +1,38 @@
+host my website in local network
+
+
+# step 1 
+
+sudo apt update
+sudo apt install net-tools -y
+ifconfig | grep inet
+
+# when get your ip address move to next step
+
+
+
+# step 2
+# your ip address in the first index in the setting.py file alaw_hosts section
+
+ALLOWED_HOSTS = ["192.168.0.105", "127.0.0.1", "localhost"]
+
+
+
+
+#step 3
+
+python manage.py runserver 0.0.0.0:8000
+
+
+
+sudo ufw allow 8000 
+
+if want to denay : sudo ufw deny 8000
+
+
+now all user can access of the local network
+http://192.168.0.105:8000
+
+
+
+
