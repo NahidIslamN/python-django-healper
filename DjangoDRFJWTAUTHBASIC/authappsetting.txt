@@ -48,6 +48,8 @@ DEFAULT_FROM_EMAIL = 'your defalt sender'  # Default sender email address
 
 
 
+
+
 + celery setting
 
 

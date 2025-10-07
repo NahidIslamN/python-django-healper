@@ -1,0 +1,46 @@
+How to config Redis Cache In django Project
+
+
+# step 1 install redis server
+
+sudo apt update
+sudo apt install redis-server
+
+
+
+#step 2
+pip install django-redis
+
+# step 3 in setting.py
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",  # db 1 use করলাম
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+
+
+
+
+############## how to user###############
+
+in your views.py file 
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+import time
+
+@method_decorator(cache_page(60), name='dispatch')  # 30 সেকেন্ডের জন্য cache
+class TimeAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        current_time = time.time()
+        return Response({"time": current_time})
+

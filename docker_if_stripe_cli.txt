@@ -54,13 +54,47 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 
 
-Step 3: Create docker-compose.yml
+# step 3: Dockerfile.stripe
+
+# Dockerfile.stripe
+FROM ubuntu:22.04
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    tar \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /stripe
+
+# Copy your Stripe tarball into the container
+COPY stripe_1.30.0_linux_x86_64.tar.gz .
+
+# Extract Stripe CLI
+RUN tar -xvf stripe_1.30.0_linux_x86_64.tar.gz
+
+# Add stripe binary to PATH
+ENV PATH="/stripe:${PATH}"
+
+# Use test API key instead of interactive login
+ENV STRIPE_API_KEY=sk_test_51RPSNiRqXCDX3CQX2hPdkFz3ei40SaviEDe3xV9Xv3pYy0tXdkOw3WB4feDdxvWWMrnVi0eVWvsUc32LEYRzLWSL00h6zXgKVu
+
+# Run Stripe listener
+CMD ["stripe", "listen", "--forward-to", "http://web:8000/managements/customer/successed_payment/"]
+
+
+
+
+Step 4: Create docker-compose.yml
 
 version: "3.9"
 
 services:
   web:
-    image: python:3.12
+    build:
+      context: .
+      dockerfile: Dockerfile
     working_dir: /app
     volumes:
       - .:/app
@@ -74,13 +108,22 @@ services:
       - redis
 
   celery:
-    image: python:3.12
+    build:
+      context: .
+      dockerfile: Dockerfile
     working_dir: /app
     volumes:
       - .:/app
-    command: celery -A YourProj worker -l info
+    command: celery -A food_app worker -l info
     depends_on:
       - redis
+
+  stripe:
+    build:
+      context: .
+      dockerfile: Dockerfile.stripe
+    depends_on:
+      - web
 
   redis:
     image: redis:7
@@ -91,7 +134,7 @@ services:
 
 
 
-#Note:
+Note:
 # project settings.py
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CHANNEL_LAYERS = {
@@ -114,10 +157,7 @@ CHANNEL_LAYERS = {
 
 
 
-
-
-
-step 4 : in .dockerignore  file in core folder
+step 5 : in .dockerignore  file in core folder
 __pycache__
 *.pyc
 *.pyo
@@ -126,11 +166,9 @@ __pycache__
 .env
 .git
 
+             
 
-
-
-
-Step 5: docker compose commands
+Step 6: docker compose commands
 
 ls -l /var/run/docker.sock
 sudo usermod -aG docker $USER
@@ -144,19 +182,3 @@ docker-compose up -d --build
 sudo docker-compose up
 
 docker-compose down
-
-
-
-
-
-
-#### if docker show port already use error#####
-
-sudo systemctl stop redis
-
-sudo service redis stop
-
-sudo lsof -i :6379
-if now show any thing
-
-এখন Docker Redis container port bind করতে পারবে।

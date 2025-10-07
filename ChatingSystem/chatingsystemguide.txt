@@ -1,0 +1,137 @@
+step 1 :requirements.txt install
+
+
+INSTALLED_APPS = [
+    'daphne',
+    'channels',
+    'chat_app',
+]
+
+
+
+step 2
+
+
+
+# settting.py 
+
+ALLOWED_HOSTS = ["*"]
+
+
+INSTALLED_APPS = [
+    'daphne',
+    'channels',
+
+]
+
+
+ASGI_APPLICATION = 'ProjectName.asgi.application'
+
+
+
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+or 
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
+
+
+
+
+
+step 3:
+
+
+# custom_auth.py in your project folder
+from urllib.parse import parse_qs
+from channels.middleware import BaseMiddleware
+from channels.db import database_sync_to_async
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+
+User = get_user_model()
+
+class CustomAuthMiddleware(BaseMiddleware):
+    async def __call__(self, scope, receive, send):
+        scope['user'] = await self.get_user(scope)
+        return await super().__call__(scope, receive, send)
+
+    @database_sync_to_async
+    def get_user(self, scope):
+        try:
+            query_string = parse_qs(scope['query_string'].decode())
+            token = query_string.get('token')  # list of values
+            if not token:
+                return AnonymousUser()
+
+            token = token[0]  # get first token
+            access_token = AccessToken(token)
+
+            user_id = access_token['user_id']
+            user = User.objects.get(id=user_id)
+            return user
+        except (User.DoesNotExist, TokenError, InvalidToken, Exception):
+    
+            return AnonymousUser()
+
+
+
+
+
+step 5
+in asgi.py
+
+
+
+
+
+import os
+
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.security.websocket import AllowedHostsOriginValidator
+from chat_app.routing import websocket_urlpatterns
+from .custom_auth import CustomAuthMiddleware
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'YourProjectName.settings')
+
+# application = get_asgi_application()
+
+# ASGI_APPLICATION = 'YourProjectName.asgi.application'
+
+
+
+application = ProtocolTypeRouter(
+    {
+        'http':get_asgi_application(),
+        "websocket": AllowedHostsOriginValidator(
+            CustomAuthMiddleware(
+                URLRouter(
+                    websocket_urlpatterns
+                )
+            )
+        )
+    }
+)
+
+
+
+
+
+
