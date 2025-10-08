@@ -78,7 +78,7 @@ RUN tar -xvf stripe_1.30.0_linux_x86_64.tar.gz
 ENV PATH="/stripe:${PATH}"
 
 # Use test API key instead of interactive login
-ENV STRIPE_API_KEY=sk_test_51RPSNiRqXCDX3CQX2hPdkFz3ei40SaviEDe3xV9Xv3pYy0tXdkOw3WB4feDdxvWWMrnVi0eVWvsUc32LEYRzLWSL00h6zXgKVu
+ENV STRIPE_API_KEY=your_stripe_secret
 
 # Run Stripe listener
 CMD ["stripe", "listen", "--forward-to", "http://web:8000/managements/customer/successed_payment/"]
