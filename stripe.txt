@@ -9,6 +9,7 @@ stripe.api_key = 'your_secret_key'
 
 
 
+#Nahid add text to the file
 
 @api_view(['POST'])
 def create_checkout_session(request, price_id):
